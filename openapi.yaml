@@ -54,7 +54,9 @@ paths:
           headers:
             x-fs-uid: { schema: { type: integer, minimum: 0, maximum: 4294967295 } }
             x-fs-gid: { schema: { type: integer, minimum: 0, maximum: 4294967295 } }
-            x-fs-home: { schema: { type: string } }
+            x-fs-dir: { schema: { type: string } }
+            x-fs-shell: { schema: { type: string } }
+            x-fs-gecos: { schema: { type: string } }
         "400": { description: Bad request }
         "401": { description: API client not authenticated }
         "404": { description: Not found or disabled }
@@ -65,7 +67,7 @@ paths:
       operationId: AuthzAuth  User
       parameters:
         - $ref: '#/components/parameters/UsernameParam'
-      summary: "Authenticate user, ensure the account is not locked, and return the UID, GID, and home directory to grant access."
+      summary: "Authenticate user, ensure the account is not locked."
       tags: [ Authz ]
       requestBody:
         required: true
@@ -82,10 +84,6 @@ paths:
       responses:
         "204":
           description: Authenticated and enabled (no body).
-          headers:
-            x-fs-uid: { schema: { type: integer } }
-            x-fs-gid: { schema: { type: integer } }
-            x-fs-home: { schema: { type: string } }
         "400": { description: Bad request }
         "401": { description: API client not authenticated. }
         "403": { description: User authentication failed (invalid username/password). }

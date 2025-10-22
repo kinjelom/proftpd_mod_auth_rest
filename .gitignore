@@ -4,3 +4,5 @@
 /cmake-build-debug
 *.tar.gz
 *.prv.*
+test_mod_auth_rest
+mod_auth_rest

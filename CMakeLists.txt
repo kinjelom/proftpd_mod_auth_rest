@@ -23,7 +23,8 @@ include_directories(
         ${CURL_INCLUDE_DIR}
 )
 
-add_library(mod_auth_rest MODULE mod_auth_rest.c)
+add_library(mod_auth_rest MODULE mod_auth_rest.c
+        test_mod_auth_rest.c)
 target_link_libraries(mod_auth_rest PRIVATE ${CURL_LIBRARY})
 
 # ProFTPD modules are .so; name convention usually mod_xxx.so
