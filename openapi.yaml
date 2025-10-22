@@ -82,10 +82,6 @@ paths:
       responses:
         "204":
           description: Authenticated and enabled (no body).
-          headers:
-            x-fs-uid: { schema: { type: integer } }
-            x-fs-gid: { schema: { type: integer } }
-            x-fs-home: { schema: { type: string } }
         "400": { description: Bad request }
         "401": { description: API client not authenticated. }
         "403": { description: User authentication failed (invalid username/password). }
