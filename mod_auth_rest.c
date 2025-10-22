@@ -16,8 +16,8 @@
 #define MOD_AUTH_REST_VERSION  "mod_auth_rest/0.1.0"
 
 /* -------- Config -------- */
-static char *auth_url = NULL; /* base, e.g. /api/authz */
-static char *lookup_url = NULL; /* base, e.g. /api/authz/users */
+static char *auth_url = NULL; /* base, e.g. /api/authz/auth */
+static char *lookup_url = NULL; /* base, e.g. /api/authz/lookup */
 static char *api_key = NULL; /* X-Api-Key value */
 static char *bearer_token = NULL; /* Authorization: Bearer <token> */
 static pr_regex_t *user_creg = NULL; /* optional username regex */
@@ -143,11 +143,6 @@ static char *build_url_with_username(pool *p, CURL *curl, const char *base, cons
     return full;
 }
 
-/* Resolve a base URL (no username suffix) with unix-aware logic */
-static char *resolve_base_url(pool *p, CURL *curl, const char *base) {
-    return prepare_url_for_curl(p, curl, base);
-}
-
 /* -------- libcurl helpers -------- */
 
 static CURL *curl_new(void) {
@@ -194,7 +189,7 @@ static char *join_pairs(pool *p, char **pairs, int n) {
 }
 
 /* -------- getpwnam handler --------
- * OpenAPI: GET /api/authz/users/{username} -> 204 + headers
+ * OpenAPI: GET /api/authz/lookup/{username} -> 204 + headers
  */
 MODRET handle_auth_rest_getpwnam(cmd_rec *cmd) {
     const char *username = cmd->argv[0];
@@ -206,7 +201,7 @@ MODRET handle_auth_rest_getpwnam(cmd_rec *cmd) {
     CURL *curl = curl_new();
     if (!curl) return PR_DECLINED(cmd);
 
-    char *url = build_url_with_username(cmd->tmp_pool, curl, lookup_url, username); /* /api/authz/users/{username} */
+    char *url = build_url_with_username(cmd->tmp_pool, curl, lookup_url, username); /* /api/authz/lookup/{username} */
     curl_easy_setopt(curl, CURLOPT_URL, url);
 
     rest_attrs attrs = (rest_attrs){0};
@@ -269,7 +264,7 @@ MODRET handle_auth_rest_getpwnam(cmd_rec *cmd) {
 }
 
 /* -------- auth handler (USER/PASS) --------
- * OpenAPI: POST /api/authz/{username} with body: password (required),
+ * OpenAPI: POST /api/authz/auth/{username} with body: password (required),
  * optional client_ip, server_ip, protocol. Expects 204 on success.
  */
 MODRET handle_auth_rest_auth(cmd_rec *cmd) {
@@ -283,7 +278,7 @@ MODRET handle_auth_rest_auth(cmd_rec *cmd) {
     CURL *curl = curl_new();
     if (!curl) return PR_DECLINED(cmd);
 
-    /* Build /api/authz/{username} */
+    /* Build /api/authz/auth/{username} */
     char *url = build_url_with_username(cmd->tmp_pool, curl, auth_url, username);
     curl_easy_setopt(curl, CURLOPT_URL, url);
 
@@ -298,8 +293,7 @@ MODRET handle_auth_rest_auth(cmd_rec *cmd) {
     if (session.c && session.c->local_addr) sip = pr_netaddr_get_ipstr(session.c->local_addr);
     if (cip && *cip) pairs[n++] = form_pair(cmd->tmp_pool, curl, "client_ip", cip);
     if (sip && *sip) pairs[n++] = form_pair(cmd->tmp_pool, curl, "server_ip", sip);
-    /* Protocol is optional; you can set to "ftp" or detect TLS to send "ftps" if desired */
-    /* pairs[n++] = form_pair(cmd->tmp_pool, curl, "protocol", "ftp"); */
+    pairs[n++] = form_pair(cmd->tmp_pool, curl, "protocol", "ftp");
 
     char *post = join_pairs(cmd->tmp_pool, pairs, n);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
@@ -408,8 +402,8 @@ MODRET set_total_timeout_ms(cmd_rec *cmd) {
 static int auth_rest_getconf(void) {
     char *ct = NULL, *tt = NULL;
 
-    auth_url = (char *) get_param_ptr(main_server->conf, "AuthRestAuthURL", FALSE); /* e.g. "/api/authz" */
-    lookup_url = (char *) get_param_ptr(main_server->conf, "AuthRestLookupURL", FALSE); /* e.g. "/api/authz/users" */
+    auth_url = (char *) get_param_ptr(main_server->conf, "AuthRestAuthURL", FALSE); /* e.g. "/api/authz/auth" */
+    lookup_url = (char *) get_param_ptr(main_server->conf, "AuthRestLookupURL", FALSE); /* e.g. "/api/authz/lookup" */
     api_key = (char *) get_param_ptr(main_server->conf, "AuthRestAPIKey", FALSE);
     bearer_token = (char *) get_param_ptr(main_server->conf, "AuthRestBearerToken", FALSE);
     user_creg = (pr_regex_t *) get_param_ptr(main_server->conf, "AuthRestUserRegex", FALSE);
@@ -423,8 +417,8 @@ static int auth_rest_getconf(void) {
 }
 
 static conftable auth_rest_conftab[] = {
-    {"AuthRestAuthURL", set_auth_url, NULL}, /* base: /api/authz */
-    {"AuthRestLookupURL", set_lookup_url, NULL}, /* base: /api/authz/users */
+    {"AuthRestAuthURL", set_auth_url, NULL}, /* base: /api/authz/auth */
+    {"AuthRestLookupURL", set_lookup_url, NULL}, /* base: /api/authz/lookup */
     {"AuthRestAPIKey", set_api_key, NULL},
     {"AuthRestBearerToken", set_bearer_token, NULL},
     {"AuthRestUserRegex", set_user_regex, NULL},
