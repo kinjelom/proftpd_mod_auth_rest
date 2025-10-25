@@ -1,0 +1,13 @@
+### `mod_auth_rest` Configuration Parameters
+
+| Directive                    | Type         | Description                                                                                                                                                  | Default                        |
+|------------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|
+| **AuthRestConnectionType**   | string       | Connection mode: `unix` for UNIX domain socket, or `tcp` for HTTP/HTTPS network calls.                                                                       | *(required)*                   |
+| **AuthRestBaseAddress**      | string       | Base address of the REST API.<br>For `unix`: path to socket file (e.g. `/var/run/fsaa.sock`).<br>For `tcp`: full base URL (e.g. `https://auth.example.com`). | *(required)*                   |
+| **AuthRestLookupPath**       | string       | Path for user lookup requests. Supports `{username}` placeholder. Combined with `AuthRestBaseAddress` to form the full lookup URL.                           | `/api/authz/lookup/{username}` |
+| **AuthRestAuthPath**         | string       | Path for authentication requests. Supports `{username}` placeholder. Combined with `AuthRestBaseAddress` to form the full authentication URL.                | `/api/authz/auth/{username}`   |
+| **AuthRestAPIKey**           | string       | Value sent in `X-Api-Key` header for API authentication.                                                                                                     | *(required)*                   |
+| **AuthRestBearerToken**      | string       | Value sent in `Authorization: Bearer <token>` header for API authentication.                                                                                 | *(required)*                   |
+| **AuthRestUserRegex**        | regex        | Regular expression limiting which usernames are handled by this module. Users not matching are ignored (other backends can try).                             | `.*` (all usernames)           |
+| **AuthRestConnectTimeoutMs** | integer (ms) | Timeout for establishing the connection to the REST API.                                                                                                     | `300`                          |
+| **AuthRestTotalTimeoutMs**   | integer (ms) | Maximum total request duration (connect + transfer + response).                                                                                              | `1000`                         |
