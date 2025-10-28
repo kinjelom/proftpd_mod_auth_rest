@@ -371,7 +371,7 @@ MODRET handle_auth_rest_lookup(cmd_rec *cmd) {
     }
 
     pw->pw_name = pstrdup(session.pool, username);
-    pw->pw_passwd = pstrdup(session.pool, "x");
+    pw->pw_passwd = pstrdup(session.pool, "*"); // can't be used to authenticate a user
 
     char *end = NULL;
     const long uid = strtol(attrs.uid, &end, 10);
@@ -645,7 +645,7 @@ static int auth_rest_sess_init(void) {
             authrest_logfd = -1; /* disable logging if open fails */
         }
     }
-    log_event(PR_LOG_ERR, "session-initialized", "", 0, 0, NULL,pstrcat(session.pool,
+    log_event(PR_LOG_INFO, "session-initialized", "", 0, 0, NULL,pstrcat(session.pool,
         "connection_type: ", connection_type, ", base_address: ", base_address, NULL));
 
     return 0;
