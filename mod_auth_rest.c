@@ -221,7 +221,6 @@ static char *subst_username(pool *p, CURL *curl, const char *tpl, const char *us
 /* Build the final URL for curl and configure UNIX socket if needed */
 static char *build_effective_url(pool *p, CURL *curl, const char *path_tpl, const char *username) {
     const char *path = subst_username(p, curl, path_tpl, username);
-
     if (is_unix_conn()) {
 #ifdef CURLOPT_UNIX_SOCKET_PATH
         curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, base_address);
@@ -229,7 +228,6 @@ static char *build_effective_url(pool *p, CURL *curl, const char *path_tpl, cons
         /* We talk plain HTTP over the UNIX socket */
         return join_base_and_path(p, "http://localhost", path);
     }
-
     /* TCP: base_address should be a full origin like https://host[:port] */
     const char *base = base_address ? base_address : "http://localhost";
     /* best-effort: if no scheme is given, assume http:// */
@@ -255,6 +253,15 @@ static CURL *curl_new(void) {
     curl_easy_setopt(h, CURLOPT_TIMEOUT_MS, total_timeout_ms);
     curl_easy_setopt(h, CURLOPT_USERAGENT, MOD_AUTH_REST_VERSION);
     curl_easy_setopt(h, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS); /* fallback ok */
+
+    /* Enable verbose output when log level is debug */
+    if (authrest_log_level >= PR_LOG_DEBUG) {
+        curl_easy_setopt(h, CURLOPT_VERBOSE, 1L);
+        if (authrest_logfd >= 0) {
+            /* Redirect curl verbose output to our log file if possible */
+            curl_easy_setopt(h, CURLOPT_STDERR, stderr);
+        }
+    }
 
     return h;
 }
