@@ -19,6 +19,11 @@ designed to be fast and simple: **no JSON parsing**—only HTTP status codes and
 * Optional username regex to scope which users this module handles
 * Case-insensitive header handling
 
+## Reference Implementation
+
+For a reference implementation of a REST server that complies with this OpenAPI specification, please visit:
+https://github.com/kinjelom/fs-access-api
+
 ## Configuration
 
 | Directive                    | Type         | Description                                                                                                                                                  | Default                        |
